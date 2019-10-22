@@ -1,0 +1,22 @@
+<usergroup>
+	<name>PeX_UG_Admin</name>
+	<maxAttempts></maxAttempts>
+	<minHistory></minHistory>
+	<minLength></minLength>
+	<maxLength></maxLength>
+	<duration></duration>
+	<policyType>Custom</policyType>
+	<urls>*/control/,*/dashboards/</urls>
+	<ips></ips>
+	<accessips></accessips>
+	<authType></authType>
+	<policy>
+		<cLower>0</cLower>
+		<cUpper>0</cUpper>
+		<number>0</number>
+		<special>0</special>
+	</policy>
+	<member>cdins1</member>
+	<member>pdoo1</member>
+	<member>test_admin_1</member>
+</usergroup>

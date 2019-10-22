@@ -1,0 +1,52 @@
+<analytic>
+	<analytic>.pex.ui.Rspec.svDwn</analytic>
+	<code_text>{[dict]
+	0N!dict;
+   
+ 
+  sID:dict[`sID];
+  matCode:dict[`matCode];
+  inspTy:dict[`inspTy];
+  att:dict[`att];
+  upp:dict[`upp];
+  lwr:dict[`lwr];
+  cl:dict[`cl];
+  stPlot:dict[`stPlot];
+  enPlot:dict[`enPlot];
+  stRev:dict[`stRev];
+  enRev:dict[`enRev];
+  uirl:dict[`uirl];
+  lirl:dict[`lirl];
+  uel:dict[`uel];
+  lel:dict[`lel];
+  stStat:dict[`stStat];
+  enStat:dict[`enStat];
+    
+    0N!"done";
+    
+    0N!dict;
+    0N!sID;
+    0N!matCode;
+    0N!att
+    
+ 
+  
+	}</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+	<param>
+		<parameter>dict</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Dict</datatype>
+	</param>
+</analytic>

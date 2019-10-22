@@ -1,0 +1,68 @@
+<analytic>
+	<analytic>.pex.ui.Rspec.QQPlot</analytic>
+	<code_text>{[matCode;inspTy;sID;att;wi;he]
+	
+     fData:select BatchCode,MfgDate:btchDt[([]BatchCode:BatchCode);`MfgDate], Val:OriginalVal from QA where SiteID in sID, MaterialCode in matCode, MasterInsp_SGO[([]InspCode:InspCode);`InspType] in inspTy, mmi[([]InspCode:InspCode);`Attribute] in att;
+
+  Rget "img &lt;- magick::image_graph(width = ",(string wi),", height = ",(string he),", res = 72)";
+  Rset ["qqTab";fData];
+  Rget "fQQ(qqTab)";  
+  Rget "dev.off()";
+  data: Rget "magick::image_data(img)";
+  :flip `width`height`data!(enlist wi;enlist he;enlist data)
+    
+	}</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+	<param>
+		<parameter>matCode</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<param>
+		<parameter>inspTy</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<param>
+		<parameter>sID</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<param>
+		<parameter>att</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<param>
+		<parameter>wi</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Integer</datatype>
+	</param>
+	<param>
+		<parameter>he</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Integer</datatype>
+	</param>
+	<analyticgroup>PeX_UI_API</analyticgroup>
+</analytic>

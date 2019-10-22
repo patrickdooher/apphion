@@ -1,0 +1,73 @@
+<analytic>
+	<analytic>.pex.util</analytic>
+	<code_text>.pex.util.getQADataSet:{[qaDict]
+    
+    // TODO - Add check to make sure all necessary keys to the dictionary are provided
+    
+    site:qaDict[`site];
+    material:qaDict[`material];
+    inspectionType:qaDict[`inspectionType];
+    mic:qaDict[`mic];
+    attribute:qaDict[`attribute];
+    stDt:qaDict[`stDt];
+    endDt:qaDict[`endDt];
+    
+    // Can you pass in multiple sites/materials?
+    // Based om the site ID and materical code - get the Dosage and Anniversary from MasterMaterialOut_SGO - PD ASSUMES ONLY ONE ROW RETURNED?
+    matMaster:select from MasterMaterialOut_SGO where SiteID = site, MaterialCode = material;
+    // Based om the site ID and materical code + Dosage and Anniversary gained above - get the InspCode and InspVersion - PD ASSUMES ONLY NE ROW RETURNED?
+    insDetails:select from MasterMattoInspMap where SiteID = site, MaterialCode = material, MaterialDosage=`$first matMaster[`Dosage], MaterialAnniversary = first matMaster[`Anniversary], Attribute = attribute;
+    //insDetails:select from masToInsp where Attribute = `$"Attrib: Content uniformity by HPLC";
+    // Get the master limits (USL/LSL/ETC...) from MasterInsp_SGO given the InspCode and Inspec Version returned above - PD ASSUMES ONLY ONE ROW RETURNED
+    masInspec:select from MasterInsp_SGO where InspCode = first insDetails[`InspCode], Version =first insDetails[`InspVersion];
+    // Need to add check if limits have expired?
+
+    // Get list of batches - based on dates supplied 
+    batchList:select from MasterBatchOut_SGO where MfgDate within (stDt;endDt), SiteID = site, MaterialCode = material, MaterialDosage=`$first matMaster[`Dosage], MaterialAnniversary = first matMaster[`Anniversary];
+    batchListKey:`BatchCode xkey batchList;
+    
+    qaVals:select from QA_Measurements_SGO where 
+        SiteID = site, MaterialCode = material, MaterialDosage=`$first matMaster[`Dosage], MaterialAnniversary = first matMaster[`Anniversary], 
+        BatchCode in batchList[`BatchCode], InspCode = first insDetails[`InspCode], InspVersion =first insDetails[`InspVersion];
+    // qaData:select BatchID:string BatchCode, Date:MaterialAnniversary,  RawValue:OriginalVal, Value:OriginalVal^NormVal, InspCode from qaVals;
+    qaData:select BatchID:string BatchCode, Date:batchListKey[([]BatchCode:BatchCode);`MfgDate],  RawValue:OriginalVal, Value:OriginalVal^NormVal, InspCode from qaVals;
+    qaData1:`ord xcols update ord:`int$1+i, ex_calc:0i, annotation:0Ni, 
+        CL:masInspec[([]InspCode:InspCode);`CL], 
+        LEL:masInspec[([]InspCode:InspCode);`LEL], 
+        UEL:masInspec[([]InspCode:InspCode);`UEL], 
+        LIRL:masInspec[([]InspCode:InspCode);`LIRL], 
+        UIRL:masInspec[([]InspCode:InspCode);`UIRL],
+        LSL:masInspec[([]InspCode:InspCode);`LSL],
+        USL:masInspec[([]InspCode:InspCode);`USL],
+        LOQ:masInspec[([]InspCode:InspCode);`LOQ],  
+        nOOS:masInspec[([]InspCode:InspCode);`nOOS],  
+        nOOE:masInspec[([]InspCode:InspCode);`nOOE], 
+        nDEV:0i, nCOMP:0i, start_review:1i, Title:0Ni, x_label:BatchID, y_label:enlist "", y_axis_min:0Ni, y_axis_max:0Ni, nelson:1234i, row.names:1+i from qaData;
+    
+    :qaData1;
+    
+    };
+
+// qaDict:()!();
+// qaDict[`dummy]:(1 2 3;4 5 6 7;8;34);
+// qaDict[`site]:`CH0007;
+// qaDict[`material]:`M004473;
+// qaDict[`inspectionType]:`INSP1;
+// qaDict[`mic]:30;
+// qaDict[`attribute]:`$"Attrib: Content uniformity by HPLC";
+// qaDict[`stDt]:2001.01.01;
+// qaDict[`endDt]:2020.01.01;
+// qaDict:qaDict _ `dummy;
+
+// .pex.util.getQADataSet[qaDict]</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Instruction</typ>
+	<private>1</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype>polling</analytictype>
+	<returndescription></returndescription>
+</analytic>

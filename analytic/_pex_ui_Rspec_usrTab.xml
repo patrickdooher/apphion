@@ -1,0 +1,17 @@
+<analytic>
+	<analytic>.pex.ui.Rspec.usrTab</analytic>
+	<code_text>{[]
+	select ix3:i, SiteID, MaterialCode, insecTy, MIC, MICDesc, Attribute, GroupID from RspecSel
+	}</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+	<analyticgroup>PeX_UI_API</analyticgroup>
+</analytic>

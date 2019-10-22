@@ -1,0 +1,41 @@
+<analytic>
+	<analytic>.pex.R.initQQPlotFunctions</analytic>
+	<code_text>{[]
+	
+    // Load qq plot functions
+    .log.out[.z.h;"Load Car Library ";()];
+    Rcmd "library(\"car\")";
+    
+    // # convert list to numeric and replace all strings (NAs) by zero
+    Rcmd "fCleanValues &lt;- function(aValue)
+	{
+		suppressWarnings(aValue &lt;- as.numeric(aValue))
+		aValue[is.na(aValue)] &lt;- 0
+		return(aValue)
+	}"
+
+    // # Create QQ plot
+    Rcmd "fQQ &lt;- function(aData)
+	{
+		# Adds a margin to the right of every plot c(bottom, left, top, right)
+		#par(mar=c(5,5,10,10), xpd=FALSE, cex=0.8,oma=c(1,3,3,3))
+
+		# if no rows in data-set return 'o data plot'
+		if (nrow(aData)&lt;2) { return(plot(1,1,main=\"Only one data point available. No Quantile plot can be drawn\",xaxt=\"n\",yaxt=\"n\",xlab=\"\",ylab=\"\",pch=0,col=0)) }
+
+		Result &lt;- fCleanValues(aData$Val)
+
+		qqPlot(Result, ylab=\"Data\", dist=\"norm\", line=\"robust\")
+	}"
+	}</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+</analytic>

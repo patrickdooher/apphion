@@ -1,0 +1,23 @@
+<usergroup>
+	<name>PeX_UG_DataSteward</name>
+	<maxAttempts></maxAttempts>
+	<minHistory></minHistory>
+	<minLength></minLength>
+	<maxLength></maxLength>
+	<duration></duration>
+	<policyType>Custom</policyType>
+	<urls></urls>
+	<ips></ips>
+	<accessips></accessips>
+	<authType></authType>
+	<policy>
+		<cLower>0</cLower>
+		<cUpper>0</cUpper>
+		<number>0</number>
+		<special>0</special>
+	</policy>
+	<member>mcamp100</member>
+	<member>pdoo5</member>
+	<member>test_datastewart_1</member>
+	<member>test_user</member>
+</usergroup>

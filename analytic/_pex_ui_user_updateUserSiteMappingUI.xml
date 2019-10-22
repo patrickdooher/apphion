@@ -1,0 +1,39 @@
+<analytic>
+	<analytic>.pex.ui.user.updateUserSiteMappingUI</analytic>
+	<code_text>{[dgAdd;dgUpd;dgDel]	
+    
+    uiTab:() xkey (`User xkey .pex.ui.user.getUserSiteMapping[]) upsert flip dgUpd;
+    .pex.ui.user.updateUserSiteMapping[uiTab];
+    }	</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+	<param>
+		<parameter>dgAdd</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Dict</datatype>
+	</param>
+	<param>
+		<parameter>dgUpd</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Dict</datatype>
+	</param>
+	<param>
+		<parameter>dgDel</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Dict</datatype>
+	</param>
+</analytic>

@@ -1,0 +1,33 @@
+<analytic>
+	<analytic>.pex.ui.user.dateValidation</analytic>
+	<code_text>{[newPassword]
+    errorMsg:0b;
+    if[newPassword~`;errorMsg:1b];
+    clearValid:{[errorMsg] if[errorMsg~0b;:`$""]};
+    setError:{[errorMsg] if[errorMsg;:`$"Invalid"]};
+    
+    clearValid[errorMsg];
+    setError[errorMsg]
+    
+    }
+    
+    
+	</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+	<param>
+		<parameter>newPassword</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol</datatype>
+	</param>
+</analytic>

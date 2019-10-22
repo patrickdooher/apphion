@@ -1,0 +1,56 @@
+<analytic>
+	<analytic>.pex.ui.Rspec.hist</analytic>
+	<code_text>{[sID;matCode;inspTy;att]
+	
+    0N!sID;
+  0N!matCode;
+  0N!inspTy;
+  0N!att;
+ tab:select BatchCode, MfgDate:btchDt[([]BatchCode:BatchCode);`MfgDate], InspLot, Value:OriginalVal, RawValue:OriginalVal from QA where SiteID in sID, MaterialCode in matCode , MasterInsp_SGO[([]InspCode:InspCode);`InspType] in inspTy, mmi[([]InspCode:InspCode);`Attribute] in att;
+
+ rnge: 0 0.5 1 1.5e;
+  t1:select cnt:count i by rnge bin Value from tab;
+  t2:([Value: -1 0 1 2]; rng:`$("&lt; 0";"0 - 0.5";"0.5 - 1";"1 - 1.5"));
+  t1 lj t2
+    
+	}</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+	<param>
+		<parameter>sID</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<param>
+		<parameter>matCode</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<param>
+		<parameter>inspTy</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<param>
+		<parameter>att</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<analyticgroup>PeX_UI_API</analyticgroup>
+</analytic>

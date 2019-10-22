@@ -1,0 +1,82 @@
+<analytic>
+	<analytic>.pex.job</analytic>
+	<code_text>
+.pex.job.jobList:([jobID:()]rSpecID:();jobDescription:();plotPer:();plotPerFreq:();revPer:();revPerFreq:();statPer:();statPerFreq:();waitPer:();waitPerFreq:();execExpiryDt:();kWords:();dtCreated:();usrCreated:()); 
+.pex.job.jobSchedule:([]jobID:();execDt:();plotStDt:();plotEndDt:();revStDt:();revEndDt:();statStDt:();statEndDt:();active:();jobStatus:()); 
+
+`.pex.job.jobList upsert (0i;`dummy;"Dummy Job";90;`days;60;`days;30;`days;5;`days;2020.01.01;"Dummy Keyword";.z.D;`sysAdmin);
+
+// Get list of jobs
+.pex.job.ui.getAllJobs:{[]
+    
+    res:select from .pex.job.jobList where jobID &gt; 0;
+    :res;
+    
+    };
+
+// Create New Job
+.pex.job.ui.createNewJob:{[dictNewJob]
+
+    newJobID:1+max (key .pex.job.jobList)[`jobID];
+    
+    // Add Validation to it
+    `.pex.job.jobList upsert  (newJobID, (value dictNewJob), .z.D,.pm.u);
+    
+    .pex.job.createJobSchedule[newJobID];
+
+   };
+
+// dictNewJob:`rSpecID`jobDescription`plotPer`plotPerFreq`revPer`revPerFreq`statPer`statPerFreq`waitPer`waitPerFreq`execExpiryDt`kWords!(`testing;"This is a test description";90;`days;60;`days;30;`days;5;`days;2020.01.01;"Dummy Keyword")
+// .pex.job.ui.createNewJob[dictNewJob]
+
+// Get RSpec Header Information for RSpec selection screen
+.pex.job.ui.getRspecHeader:{[]
+    
+    // Needs to be permissioned
+    
+    res:select RspecName, Version, Description, CreatedBy, TopicKeywords from RspecHeader where Active;
+    :res;
+    
+    };
+
+// Create Job Schedule
+.pex.job.createJobSchedule:{[jID]
+    
+    jDetails:() xkey select from .pex.job.jobList where jobID = jID;
+    // Need to update to check for months/years and not just days (move to utility fuctions)
+    noExecutions:first floor (jDetails[`execExpiryDt]-jDetails[`dtCreated] )%jDetails[`revPer];
+    if[not noExecutions &gt; 0;
+        strErr:"No jobs to schedule ";
+        .log.err[.z.h;strErr;(jDetails[`execExpiryDt];jDetails[`dtCreated])];
+        :`$strErr;        
+        ];
+    execSchedule:(first jDetails[`dtCreated]+jDetails[`waitPer])+(first jDetails[`revPer])*til noExecutions;
+    plotEndDtList:revEndDtList:statEndDtList:execSchedule-(first jDetails[`waitPer]);
+    plotStartDtList:plotEndDtList-(first jDetails[`plotPer]);
+    revStartDtList:revEndDtList-(first jDetails[`revPer]);
+    statStartDtList:statEndDtList-(first jDetails[`statPer]);
+    
+    `.pex.job.jobSchedule upsert flip (cols .pex.job.jobSchedule)!((count execSchedule)#jID;execSchedule;plotStartDtList;plotEndDtList;revStartDtList;revEndDtList;statStartDtList;statEndDtList;(count execSchedule)#1b;(count execSchedule)#`scheduled);
+    
+    };
+
+// Get schedule for the jobID
+.pex.job.getJobSchedule:{[jID]
+    
+    :`execDt xdesc select from .pex.job.jobSchedule where jobID = jID;
+    
+    };
+
+
+</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Instruction</typ>
+	<private>1</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype>polling</analytictype>
+	<returndescription></returndescription>
+</analytic>

@@ -1,0 +1,27 @@
+<analytic>
+	<analytic>.pex.ui.user.nullValidation</analytic>
+	<code_text>{[data]
+	clearValid:{@[x;where `null&lt;&gt;x;:;`$""]};
+    setError:{@[x;where `null=x;:;`$"Invalid, null is not allowed"]};
+    
+    data2:clearValid data;
+    setError data2
+	}</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+	<param>
+		<parameter>data</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol</datatype>
+	</param>
+</analytic>

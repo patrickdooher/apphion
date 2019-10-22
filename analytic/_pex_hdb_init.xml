@@ -1,0 +1,39 @@
+<analytic>
+	<analytic>.pex.hdb.init</analytic>
+	<code_text>{[]
+    // Loading .pex instruction
+    .log.out[.z.h;"Loading .pex.util instruction ";()];
+    .al.loadinstruction[`.pex.util];
+    
+    .log.out[.z.h;"Loading .pex.ui.user instruction ";()];
+    .al.loadinstruction[`.pex.ui.user];
+
+    .log.out[.z.h;"Loading .pex.pem instruction ";()];
+    .al.loadinstruction[`.pex.pem];
+
+    .log.out[.z.h;"Loading .pex.job instruction ";()];
+    .al.loadinstruction[`.pex.job];
+
+    .log.out[.z.h;"Loading .pex.itxt instruction ";()];
+    .al.loadinstruction[`.pex.itxt];
+
+    // Loading R 
+    .log.out[.z.h;"Loading R initisation ";()];
+    .al.callfunction[`.pex.R.initR][];
+    
+    // Getting Site Level Permissions
+    .uc.getAndSaveActiveParamValue[`PeX_CP_UserSiteMapping;`EnvironmentOverride;`.pex.ui.util.usrSite;enlist[`action]!enlist (`.pex.ui.util.updateUsrSiteMappingCfg;`)];
+    .pex.ui.util.updateUsrSiteMappingCfg[];
+
+	}</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+</analytic>

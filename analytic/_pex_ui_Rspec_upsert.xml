@@ -1,0 +1,50 @@
+<analytic>
+	<analytic>.pex.ui.Rspec.upsert</analytic>
+	<code_text>{[rSpecID;sID;glb;lgTxt]
+	
+  /tab:([]enlist RspecID:rSpecID;site:sID; material:matCode; attribute:att);
+   tab:([]enlist RspecID:rSpecID; enlist username:.z.u; enlist Tags:sID; enlist PrvteGlbl:glb; enlist longTxt:lgTxt);
+
+ `RspecTab upsert tab
+    
+	}</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+	<param>
+		<parameter>rSpecID</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol</datatype>
+	</param>
+	<param>
+		<parameter>sID</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol</datatype>
+	</param>
+	<param>
+		<parameter>glb</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>String</datatype>
+	</param>
+	<param>
+		<parameter>lgTxt</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol</datatype>
+	</param>
+	<analyticgroup>PeX_UI_API</analyticgroup>
+</analytic>

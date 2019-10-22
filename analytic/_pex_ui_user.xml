@@ -1,0 +1,251 @@
+<analytic>
+	<analytic>.pex.ui.user</analytic>
+	<code_text>.pex.ui.user.userExcluseList:`deltacomponent`Administrator`deltadaemon`deltaserver`kxemail`DeltaMonAdministrator`OpsAdministrator`deltadocgen;
+.pex.ui.user.userGroupRoleMapping:`PeX_UG_Admin`PeX_UG_CMOUser`PeX_UG_DataSteward`PeX_UG_Goverance`PeX_UG_PowerUser`PeX_UG_ProductReviewBoardPRB!("Admin";"CMO User";"Data Steward";"Goverance";"Power User";"Product Review Board");
+.pex.ui.user.userGroupRoleMappingReverse:(`$value .pex.ui.user.userGroupRoleMapping)!key .pex.ui.user.userGroupRoleMapping;
+
+// Get list of possible user roles
+.pex.ui.user.getUserRoles:{[]
+    :`$value .pex.ui.user.userGroupRoleMapping;
+    };
+// .pex.ui.user.getUserRoles[]
+
+//.pex.ui.user.getAllUsers:{[]
+// Get list of user names
+//userList:.px.upd.getUsers[`ALL][`name] except .pex.ui.user.userExcluseList;
+// Result table to return
+//userRoleTab:([]user:();role:());
+// Loop thorugh all the users and get their roles
+//userRoleTab:userRoleTab uj raze {[u]
+//        r:.px.pm.getUser[u][`groups];
+//        :([]user:(count r)#u;role:r);
+//        }each userList;
+// Delete roles which are not relevant to PeX
+//userRoleTab:delete from userRoleTab where not role in key .pex.ui.user.userGroupRoleMapping;
+//:userRoleTab
+//}
+
+// Get all the users and their roles
+.pex.ui.user.getAllUsers:{[]
+    
+    // Get list of user names
+    userList:.px.upd.getUsers[`ALL][`name] except .pex.ui.user.userExcluseList;
+
+    // Get the user group mapping table from Control
+    tmp:.ex.prh `.pm.ugroup;
+    userRoleTab:select user:member, role:ugroup from (.ex.prh `.pm.ugroup) where member in userList;
+    
+    // Delete roles which are not relevant to PeX
+    userRoleTab:delete from userRoleTab where not role in key .pex.ui.user.userGroupRoleMapping;
+    :userRoleTab;
+    };
+
+
+.pex.ui.user.getAllUsers[]
+
+// Create User should take dict with keys - username, useremail, userpass, userrole.
+// dict:`username`useremail`userpass`userrole!(`pdoo;`$"pd@kx.com";`testpas1;`$"Data Steward")
+// TODO - ensure user is added to package for persistence
+// TODO - Check error that .px.pm.deleteUser doesn't actually delete an user
+.pex.ui.user.createUser:{[dict]
+    
+    username:dict[`username];
+    useremail:dict[`useremail];
+    userpass:dict[`userpass];
+    userrole:.pex.ui.user.userGroupRoleMappingReverse[dict[`userrole]];  // TODO Maybe add check that userrole is valid but because it is passed from UI then going to assume it exists for now.
+    
+    .log.out[.z.h;"Creating user ";username];
+    
+    // First check does the username already exist;
+    if[username in .px.upd.getUsers[`ALL][`name];
+        .log.err[.z.h;"Username already exists";()];
+        :`$"Username ",(string username)," already exists - please choose new username";
+        ];
+    
+    // Create dictionary and call .px.pm.addUser
+    addUserDict:`user`password`email`inherit`maxAttempts`minHistory`minLength`maxLength`duration`policy!(username;userpass;useremail;0b;6;5;6;18;90;`cLower`cUpper`number`special!(1i;1i;1i;0i));
+    res:.px.pm.addUser[addUserDict];
+    
+    if[not username in .px.upd.getUsers[`ALL][`name];
+        .log.err[.z.h;"Username was not created";res];
+        :`$"Username ",(string username)," was not created ";
+        ];
+
+    // Now that user has been created - add them to the relevant usergroup
+    .pex.ui.user.updateRole[dict];
+    .log.out[.z.h;"User Created ";(username;userrole)];
+    :`$"User '",(string username)," : ",(string dict[`userrole]),"' created";
+
+ };
+
+// dict:`username`useremail`userpass`userrole!(`$"pdoo7";`$"pd@kx.com";`testpasS1;`$"Data Steward")
+// .pex.ui.user.createUser[dict]
+// .px.pm.deleteUser[ username ]
+    
+// Update Role for given user
+// parameters `username`userrole
+.pex.ui.user.updateRole:{[dict] 
+    
+    // TODO - Maybe add check that user already exists but because coming from UI going to assume it already 
+    username:dict[`username];
+    userrole:.pex.ui.user.userGroupRoleMappingReverse[dict[`userrole]];  // TODO Maybe add check that userrole is valid but because it is passed from UI then going to assume it exists for now.
+    
+    .log.out[.z.h;"Adding user to group ";(username;userrole)];
+    .px.pm.setUserGroups[username;userrole];
+    
+    };
+// .pex.ui.user.updateRole[`username`userrole!(`pdoo7;`$"Power User")]
+
+// Update Password for given user
+// parameters `username`userpass
+.pex.ui.user.resetPassword:{[dict]
+    username:dict[`username];
+    userpass:dict[`userpass];
+    
+    .log.out[.z.h;"Updating password for user ";username];
+    .px.pm.resetPassword[username;userpass];
+    
+    };
+// .pex.ui.user.resetPassword[`username`userpass!(`pdoo7;`pass90Y)]
+     
+// Lock a user
+.pex.ui.user.lockUser:{[dict]
+    username:dict[`username];
+    
+    .log.out[.z.h;"Locking user ";username];
+    .px.pm.lock[username];
+    };
+// .pex.ui.user.lockUser[(enlist `username)!enlist `pdoo7]
+
+// Lock a user
+.pex.ui.user.unlockUser:{[dict]
+    username:dict[`username];
+    
+    .log.out[.z.h;"Unlocking user ";username];
+    .px.pm.unlock[username];
+    };
+// .pex.ui.user.unlockUser[(enlist `username)!enlist `pdoo7]
+
+// Lock a user
+.pex.ui.user.deleteUser:{[dict]
+    username:dict[`username];
+    
+    .log.out[.z.h;"Deleting user ";username];
+    .px.pm.deleteUser[username];
+    };
+// .pex.ui.user.deleteUser[(enlist `username)!enlist `pdoo7]
+
+// Get list of all sites
+.pex.ui.util.getSites:{[]
+    :MasterSiteOut_SGO
+    }
+    
+// Generate a random list of site permissions
+.pex.ui.util.getRandomUserSiteMap:{
+    cUsr:count usrList:.pex.ui.user.getAllUsers[];
+    siteList:.pex.ui.util.getSites[][`SiteID];
+    siteMap:enlist ();
+    do[(count siteList);siteMap,:enlist (count usrList)?0b];
+    :flip (`User`Role`ALL,siteList)!(usrList[`user];usrList[`role];(count usrList)#0b),1_siteMap;
+    };
+
+// Craete an empty list of site permisssions to be populated from the config parameter
+.pex.ui.util.getEmptyUserSiteMap:{
+    usrList:.pex.ui.user.getAllUsers[];
+    cUsr:count usrList;
+    siteList:.pex.ui.util.getSites[][`SiteID];
+    siteMap:enlist ();
+    do[(count siteList);siteMap,:enlist (count usrList)#0b];
+    :flip (`User`Role`ALL,siteList)!(usrList[`user];usrList[`role];(count usrList)#0b),1_siteMap;
+    };
+
+// Creae the user site mapping table
+.pex.ui.user.createUserSiteMappingTab:{
+
+    // Create empty mapping table
+    .log.out[.z.h;"Creating Empty User Site Mapping table ";()];
+    .pex.ui.util.usrSiteEmptyTab:.pex.ui.util.getEmptyUserSiteMap[];
+
+    // update usr permissions 
+    .pex.ui.util.updateEmptyUserSiteMappingTab'[.pex.ui.util.usrSiteGrp[`usr];.pex.ui.util.usrSiteGrp[`site]];
+    
+    // Update global mapping table that can be used for permissions
+    .pex.usrSiteMapping:.pex.ui.util.usrSiteEmptyTab;
+    
+    // update ALL site permission for any users that don't have specific site level permissions
+    update ALL:1b from `.pex.usrSiteMapping where not User in .pex.ui.util.usrSiteGrp[`usr];
+    
+    // Create mapping dictionary for permissions check
+    .pex.pem.usrSitePermissions:(.pex.ui.util.usrSiteGrp[`usr])!(.pex.ui.util.usrSiteGrp[`site]);    
+    :.pex.usrSiteMapping;
+    };
+
+// Update empty site mapping table with actual permissions
+.pex.ui.util.updateEmptyUserSiteMappingTab:{[usr;siteList]
+    siteDict:()!();
+    siteDict[siteList]:(count siteList)#1b;
+    .log.out[.z.h;"Updating user site permissions for ";(usr;siteList)];
+    ![`.pex.ui.util.usrSiteEmptyTab;enlist (=;`User;enlist usr);0b;siteDict];
+    };
+
+// Update user-site mapping - called whenever the config parameter is updated
+.pex.ui.util.updateUsrSiteMappingCfg:{[]
+    .log.out[.z.h;"Updating .pex.ui.util.usrSite ";()];
+    .pex.ui.util.usrSiteGrp:() xkey select site by usr from .pex.ui.util.usrSite;
+    .pex.ui.user.createUserSiteMappingTab[];
+    };
+
+// Get table of user - site mappings
+.pex.ui.user.getUserSiteMapping:{[]
+    :.pex.usrSiteMapping;
+    };
+
+// Update user-site mappinsg from the UI
+.pex.ui.user.updateUserSiteMapping:{[uiTab]
+
+    .log.out[.z.h;"Updating User Site Mapping Table ";()];
+    sList:3_cols uiTab;
+    sFilt:uiTab[sList];
+    uList:uiTab[`User];
+    res:`usr`site xcols raze {[uList;site;siteFilter]
+        if[count where siteFilter;
+            :([]site:site;usr:uList[where siteFilter]);
+            ];
+        :([]site:();usr:());
+    }[uList]'[sList;sFilt];
+
+    .log.out[.z.h;"Commiting Update for User Site Mapping Table ";()];
+    .uc.editActiveSingleParamData[`PeX_CP_UserSiteMapping;`EnvironmentOverride;res];
+    
+    .pex.usrSiteMapping:uiTab;
+    };
+
+// Save Rspec
+.pex.ui.rspec.saveRspec:{[rSpecDict]
+    
+    site:rSpecDict[`site];
+    material:rSpecDict[`material];
+    inspectionType:rSpecDict[`inspectionType];
+    mic:rSpecDict[`mic];
+    attribute:rSpecDict[`attribute];
+
+    rSpecID:`$"PEX_",string 1+exec max RspecName from select "I"$ -1 sublist'string RspecName from RspecHeader;
+    
+    `RspecHeader upsert (rSpecID;`$"1.0";`;`Private;.z.D;.z.D;.pm.u;`$string .z.Z;1b;`;`;`);
+    `RspecDetails upsert (`$"10";rSpecID;`$"1.0";inspectionType;material;site;`;.z.D;`;`;`;`;0f;0f;0f;0f;0f;0f;0f;0f;`;`;`;`;`;`;`;`;`;`;`;`;`;`;`;`;`;`;`;`;`;`;`;`);
+    
+    :rSpecID;
+    };</code_text>
+	<description>.pex.ui.user functions
+For user definition screen
+</description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Instruction</typ>
+	<private>1</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype>polling</analytictype>
+	<returndescription></returndescription>
+</analytic>

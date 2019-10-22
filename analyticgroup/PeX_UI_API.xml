@@ -1,0 +1,16 @@
+<analyticgroup>
+	<name>PeX_UI_API</name>
+	<parameter>ignore</parameter>
+	<analytic>.pex.ui.Rspec.QQPlot</analytic>
+	<analytic>.pex.ui.Rspec.add</analytic>
+	<analytic>.pex.ui.Rspec.btData</analytic>
+	<analytic>.pex.ui.Rspec.hist</analytic>
+	<analytic>.pex.ui.Rspec.remove</analytic>
+	<analytic>.pex.ui.Rspec.save</analytic>
+	<analytic>.pex.ui.Rspec.select</analytic>
+	<analytic>.pex.ui.Rspec.stat</analytic>
+	<analytic>.pex.ui.Rspec.table</analytic>
+	<analytic>.pex.ui.Rspec.upsert</analytic>
+	<analytic>.pex.ui.Rspec.usrTab</analytic>
+	<visibility>private</visibility>
+</analyticgroup>

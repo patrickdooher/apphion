@@ -1,0 +1,675 @@
+<analytic>
+	<analytic>.pex.R.initRScript</analytic>
+	<code_text>{[]
+    Rcmd "fTSplot &lt;- function(aData)
+    {
+      aData$NumValues &lt;- fCleanValues(aData$Value)  # replace all non numeric values by zero (remove \"LOQ\", \"&lt;0.xxx\")
+
+      # Adds a margin to the right of every plot c(bottom, left, top, right)
+      #par(mar=c(10,4,4,4), xpd=FALSE, cex=0.8, oma=c(1,3,3,3))
+
+      # if metadata is not provided in function call read from datafile
+      yAmin &lt;- aData$y_axis_min[1]
+      yAmax &lt;- aData$y_axis_max[1]
+      aTitle &lt;- aData$Title[1]
+
+      maxV   &lt;- max(aData$NumValues)
+      minV   &lt;- min(aData$NumValues)
+      maxUSL &lt;- max(aData$USL)
+      maxUEL &lt;- max(aData$UEL)
+      minLSL &lt;- min(aData$LSL)
+      minLEL &lt;- min(aData$LEL)
+
+      maxY &lt;- max(c(maxUSL, maxUEL, maxV), na.rm=TRUE)
+      minY &lt;- min(c(minLSL, minLEL, minV), na.rm=TRUE)
+
+      # if no y scaling is provided by function call use autoscaling
+      if (is.na(yAmin)) { yAmin &lt;- minY }
+      if (is.na(yAmax)) { yAmax &lt;- maxY }
+
+      myTS &lt;- aData$Date
+      plot(myTS, aData$NumValues, ylim=c(yAmin,yAmax), ylab=aData$y_label, xlab=\"\")
+      if (!is.na(aData$LSL[nrow(aData)])) { points(aData$Date,fCleanValues(aData$LSL),type=\"l\",col=2,lwd=2,lty=1) }
+      if (!is.na(aData$USL[nrow(aData)])) { points(aData$Date,fCleanValues(aData$USL),type=\"l\",col=2,lwd=2,lty=1) }
+      if (!is.na(aData$LEL[nrow(aData)])) { points(aData$Date,fCleanValues(aData$LEL),type=\"l\",col=3,lwd=2,lty=2) }
+      if (!is.na(aData$UEL[nrow(aData)])) { points(aData$Date,fCleanValues(aData$UEL),type=\"l\",col=3,lwd=2,lty=2) }
+      if (!is.na(aData$CL[nrow(aData)]))  { points(aData$Date,fCleanValues(aData$CL), type=\"l\",col=4,lwd=2,lty=3) }
+
+      op &lt;- par(xpd=TRUE)
+      #legend(\"bottom\", bty=\"n\", inset=c(0,-0.3), ncol=3, legend=c(\"OOS\",\"OOE\",\"CL\"), cex=0.8, lwd=c(2,2,2), lty=c(1,2,3), pch=c(-1,-1,-1), col=c(2,3,4))
+      #title(main=aTitle, outer=TRUE, cex.main=1.5)
+      par(op)
+    }"
+
+
+    Rcmd "fCPVplot &lt;- function(aData, aType)
+    {
+      isf &lt;- sapply(aData,is.factor)
+      aData[isf] &lt;- lapply(aData[isf],as.character)
+      aData$Date &lt;- as.Date(aData$Date,\"%d.%m.%Y\")
+
+      # sort aData by Date and Batch ID (save first-row values &amp; set them in first position again after the sort)
+      if (nrow(aData) &gt; 1) {
+        temp_start_review &lt;- aData$start_review[1]
+        temp_title  &lt;- aData$title[1]
+        temp_xlabel &lt;- aData$x_label[1]
+        temp_ylabel &lt;- aData$y_label[1]
+        temp_yaxismin &lt;- aData$y_axis_min[1]
+        temp_yaxismax &lt;- aData$y_axis_max[1]
+        temp_nelson &lt;- aData$nelson[1]
+
+        # reorder data and reinitialize index to a straight sequence
+        aData &lt;- aData[order(aData$Date,aData$BatchID),]
+        aData$index &lt;- seq(1,nrow(aData))
+
+        aData$start_review[1] &lt;- as.numeric(temp_start_review)
+        aData$title[1]   &lt;- temp_title
+        aData$x_label[1] &lt;- temp_xlabel
+        aData$y_label[1] &lt;- temp_ylabel
+        aData$y_axis_min[1] &lt;- as.numeric(temp_yaxismin)
+        aData$y_axis_max[1] &lt;- as.numeric(temp_yaxismax)
+        aData$nelson[1] &lt;- temp_nelson
+      }
+      aData$LSL  &lt;- as.numeric(aData$LSL)
+      aData$USL  &lt;- as.numeric(aData$USL)
+      aData$LEL  &lt;- as.numeric(aData$LEL)
+      aData$UEL  &lt;- as.numeric(aData$UEL)
+      aData$CL   &lt;- as.numeric(aData$CL)
+      aData$LOQ  &lt;- as.numeric(aData$LOQ)
+      aData$LIRL &lt;- as.numeric(aData$LIRL)
+      aData$UIRL &lt;- as.numeric(aData$UIRL)
+      aData$nOOS  &lt;- as.numeric(aData$nOOS)
+      aData$nOOE  &lt;- as.numeric(aData$nOOE)
+      aData$nDEV  &lt;- as.numeric(aData$nDEV)
+      aData$nCOMP &lt;- as.numeric(aData$nCOMP)
+
+      if (aType==\"Stats\") { return(fCPVstats(aData))
+      } else if (aType==\"OPpk\") { return(fOverallPpk(aData))
+      } else if (aType==\"Data\") {
+        myTable &lt;- data.frame(aData$index,format(aData$Date,format=\"%d.%m.%y\"),aData$BatchID,aData$Value,aData$LSL,aData$USL,aData$ex_calc,aData$annotation)
+        names(myTable) &lt;- c(\"Index\",\"Date\",\"BatchID\",\"Value\",\"LSL\",\"USL\",\"ExCalc\",\"Ann.\")
+        return(myTable)
+      } else if (aType==\"Summary\") {
+        Summary &lt;- list()
+        Summary$LSL &lt;- aData$LSL[nrow(aData)]
+        Summary$USL &lt;- aData$USL[nrow(aData)]
+        Summary$LEL &lt;- aData$LEL[nrow(aData)]
+        Summary$UEL &lt;- aData$UEL[nrow(aData)]
+        Summary$CL  &lt;- aData$CL[nrow(aData)]
+        Summary$LOQ &lt;- aData$LOQ[nrow(aData)]
+        return(Summary)
+      }
+
+      if (aType == \"Hist\" || aType == \"QQ\") {
+        # select review-period-only data for Hist &amp; QQ
+        pData &lt;- (if(!nrow(aData) || aData$start_review[1] &gt; nrow(aData)) aData[0,] else aData[aData$start_review[1]:nrow(aData),])
+      } else {
+        pData &lt;- aData
+      }
+
+      # if no rows in data set return \"no data plot\"
+      if (nrow(pData)&lt;1) { return(plot(1,1,main=\"No data available for attribute within the date range of execution\",xaxt=\"n\",yaxt=\"n\",xlab=\"\",ylab=\"\",pch=0,col=0)) }
+
+      return(switch(aType
+            , CC    = fCC(pData,\"C\")
+            , Hist  = fHist(pData)
+            , QQ    = fQQ(pData)
+            , stop(paste0(\"Error: unmatched type '\",aType,\"'\"))
+      ))
+    }"
+
+
+    Rcmd "fCPVstats &lt;- function(aData, aLSL=NA, aUSL=NA, aLEL=NA, aUEL=NA, aCL=NA, aLIRL=NA, aUIRL=NA, aLOQ=NA)
+    {
+      # if no rows in data-set return \"NAs\"
+      if (nrow(aData)&lt;1) {
+        myNA &lt;- NA
+        results &lt;- as.list(c(myNA,myNA,myNA,myNA,myNA,myNA,myNA,myNA,myNA,myNA,0,0,myNA,myNA,myNA,myNA,myNA,myNA,myNA,myNA,myNA,myNA,myNA,0))
+        names(results) &lt;- c(\"Ppk\",\"PpkCl\",\"PpkCu\",\"Mean\",\"SD\",\"Min\",\"Max\",\"LSL\",\"USL\",\"LOQ\",\"n-LOQs\",\"n\",\"nNel1\",\"nNel2\",\"nNel3\",\"nNel4\",\"LCL\",\"UCL\",\"LEL\",\"UEL\",\"CL\",\"LIRL\",\"UIRL\",\"nExData\")
+        return(results)
+      }
+      aData$NumValues &lt;- fCleanValues(aData$Value)  # replace all non numeric values by zero (remove \"LOQ\", \"&lt;0.xxx\")
+
+      # run nelson tests and other stats for review data range only
+      rData &lt;- (if(!nrow(aData) || aData$start_review[1] &gt; nrow(aData)) aData[0,] else aData[aData$start_review[1]:nrow(aData),])
+
+      cData &lt;- fCleanValues(rData$Value[rData$ex_calc!=1])
+      nData &lt;- length(cData)  # Count number of values
+
+      # get number of excluded batches
+      exData &lt;- fCleanValues(rData$Value[rData$ex_calc==1])
+      nExData &lt;- length(exData)  # Count number of exclusion values
+      print(nExData)
+
+      # if metadata is not provided in function arguments read from provided data file
+      if (is.na(aLSL)) { aLSL &lt;- aData$LSL[nrow(aData)] }
+      if (is.na(aUSL)) { aUSL &lt;- aData$USL[nrow(aData)] }
+      if (is.na(aLEL)) { aLEL &lt;- aData$LEL[nrow(aData)] }
+      if (is.na(aUEL)) { aUEL &lt;- aData$UEL[nrow(aData)] }
+      if (is.na(aCL))  { aCL  &lt;- aData$CL[nrow(aData)]  }
+      if (is.na(aLIRL)){ aLIRL&lt;- aData$LIRL[nrow(aData)] }
+      if (is.na(aUIRL)){ aUIRL&lt;- aData$UIRL[nrow(aData)] }
+      if (is.na(aLOQ)) { aLOQ &lt;- aData$LOQ[nrow(aData)] }
+
+      if (is.na(aLIRL)) { aLL &lt;- aLSL } else {aLL &lt;- aLIRL}
+      if (is.na(aUIRL)) { aUL &lt;- aUSL } else {aUL &lt;- aUIRL}
+
+      nLOQ &lt;- (if(is.na(aLOQ)) 0 else length(cData[cData&lt;aLOQ]))  # Count number of below-LOQ data values
+      xData &lt;- cData[cData&gt;=aLOQ]  # Create vector without the below-LOQ values
+      kValid &lt;- nData - nLOQ  # Number of observations not LOQ
+
+      if (nLOQ&gt;0) {
+        # if values &lt; aLOQ use equation based on estimated mean and estimated standard deviation
+        pct &lt;- nLOQ/nData  # percentage of total values that are below LOQ
+        a &lt;- sum(xData-aLOQ)
+        ai &lt;- sum(xData)
+        bi &lt;- sum(xData^2)
+        b &lt;- sum((xData-aLOQ)^2)
+        lambda &lt;- qnorm(pct)
+        alpha &lt;- (nData/kValid)*(1/sqrt(2*pi))*exp(-lambda^2/2)
+        Srml &lt;- (1/2)*(((a*lambda)/kValid)+sqrt(((a*lambda)/kValid)^2+4*(b/kValid)))
+        estMean &lt;- (ai/kValid)-alpha*Srml
+        estSD &lt;- sqrt((bi/kValid)-(ai/kValid)^2-(alpha*lambda-alpha^2)*Srml^2)
+      } else {
+        # if no values &lt; LOQ then regular calculation
+        estMean &lt;- mean(cData)
+        estSD &lt;- sd(cData)
+      }
+      if (is.na(aCL)) aCL &lt;- estMean
+
+      if (is.na(aLL)) {
+          Ppk &lt;- (aUL-estMean) / (3 * estSD)
+        } else if (is.na(aUL)) {
+          Ppk &lt;- (estMean-aLL) / (3 * estSD)
+        } else { Ppk &lt;- (min(aUL-estMean, estMean-aLL)) / (3 * estSD) }
+
+      # calculate CI for Ppk
+      Zscore &lt;- qnorm(1-(0.05/2))  # double sided spec alpha / 2
+      PpkCIu &lt;- Ppk+Zscore*sqrt((1/(9*nData))+((Ppk^2)/(2*(nData-1))))
+      PpkCIl &lt;- Ppk-Zscore*sqrt((1/(9*nData))+((Ppk^2)/(2*(nData-1))))
+
+      # calculate LCL / UCL
+      LCL &lt;- estMean-(3*estSD)
+      UCL &lt;- estMean+(3*estSD)
+
+      # For Nelson 1, if LEL and UEL are missing, use 3 sd
+      nelsLL &lt;- (if(is.na(aLEL)) LCL else aLEL)
+      nelsUL &lt;- (if(is.na(aUEL)) UCL else aUEL)
+
+      if (nrow(rData)&gt;1) {
+        N1count &lt;- nrow(fNelson1(rData,nelsLL,nelsUL))
+        N2count &lt;- nrow(fNelson2(rData,aCL))
+        N3count &lt;- nrow(fNelson3(rData))
+        N4count &lt;- nrow(fNelson4(rData))
+      }
+      else {
+        N1count &lt;- NA
+        N2count &lt;- NA
+        N3count &lt;- NA
+        N4count &lt;- NA
+      }
+
+      tMin = (if(nData&gt;0) min(cData) else NA )
+      tMax = (if(nData&gt;0) max(cData) else NA )
+
+      results &lt;- as.list(c(Ppk,PpkCIl,PpkCIu,estMean,estSD,tMin,tMax,aLSL,aUSL,aLOQ,nLOQ,nData,N1count,N2count,N3count,N4count,LCL,UCL,aLEL,aUEL,aCL,aLIRL,aUIRL,nExData))
+      names(results) &lt;- c(\"Ppk\",\"PpkCl\",\"PpkCu\",\"Mean\",\"SD\",\"Min\",\"Max\",\"LSL\",\"USL\",\"LOQ\",\"n-LOQs\",\"n\",\"nNel1\",\"nNel2\",\"nNel3\",\"nNel4\",\"LCL\",\"UCL\",\"LEL\",\"UEL\",\"CL\",\"LIRL\",\"UIRL\",\"nExData\")
+
+      return(results)
+    }"
+
+
+    Rcmd "fCC &lt;- function(aData, aUseStat=FALSE)
+    {
+      if (is.na(aUseStat) || aUseStat==FALSE) aUseStat &lt;- \"\"
+      if (aUseStat==TRUE) aUseStat &lt;- \"LC\"
+
+      #par(mar=c(16,4,6,2), xpd=FALSE, cex=0.7, las=2, oma=c(0,2,2,1))  # c(bottom (4 MII 10), left, top, right)
+      par(cex=0.7)
+
+      aData$NumValues &lt;- fCleanValues(aData$Value)  # replace all non numeric values by zero (remove \"LOQ\", \"&lt;0.xxx\")
+
+      # set default flag values
+      Nelson &lt;- aData$nelson[1];  if (is.na(Nelson)) { Nelson &lt;- \"1234\" }
+      NelsonIndex &lt;- aData$nelsonIndex[1];  if (is.null(NelsonIndex) || is.na(NelsonIndex)) { NelsonIndex &lt;- FALSE }
+
+      # Read metadata from datafile
+
+      # limit is single-value if all are NA or if only one non-NA or if all have same value (note that a single value need not be at position 1)
+      LSL_A  &lt;- aData$LSL[!is.na(aData$LSL)];   len_A &lt;- length(LSL_A);  LSL &lt;- (if(len_A) LSL_A[len_A] else NA);  singleLSL  &lt;- ((len_A&lt;=1) || ((len_A==length(aData$LSL)) &amp;&amp; (!var(LSL_A))))
+      USL_A  &lt;- aData$USL[!is.na(aData$USL)];   len_A &lt;- length(USL_A);  USL &lt;- (if(len_A) USL_A[len_A] else NA);  singleUSL  &lt;- ((len_A&lt;=1) || ((len_A==length(aData$USL)) &amp;&amp; (!var(USL_A))))
+      LEL_A  &lt;- aData$LEL[!is.na(aData$LEL)];   len_A &lt;- length(LEL_A);  LEL &lt;- (if(len_A) LEL_A[len_A] else NA);  singleLEL  &lt;- ((len_A&lt;=1) || ((len_A==length(aData$LEL)) &amp;&amp; (!var(LEL_A))))
+      UEL_A  &lt;- aData$UEL[!is.na(aData$UEL)];   len_A &lt;- length(UEL_A);  UEL &lt;- (if(len_A) UEL_A[len_A] else NA);  singleUEL  &lt;- ((len_A&lt;=1) || ((len_A==length(aData$UEL)) &amp;&amp; (!var(UEL_A))))
+      CL_A   &lt;- aData$CL[!is.na(aData$CL)];     len_A &lt;- length(CL_A);   CL  &lt;- (if(len_A) CL_A[len_A]  else NA);  singleCL   &lt;- ((len_A&lt;=1) || ((len_A==length(aData$CL))  &amp;&amp; (!var(CL_A))))
+      LIRL_A &lt;- aData$LIRL[!is.na(aData$LIRL)]; len_A &lt;- length(LIRL_A); LIRL&lt;- (if(len_A) LIRL_A[len_A] else NA); singleLIRL &lt;- ((len_A&lt;=1) || ((len_A==length(aData$LIRL))&amp;&amp; (!var(LIRL_A))))
+      UIRL_A &lt;- aData$UIRL[!is.na(aData$UIRL)]; len_A &lt;- length(UIRL_A); UIRL&lt;- (if(len_A) UIRL_A[len_A] else NA); singleUIRL &lt;- ((len_A&lt;=1) || ((len_A==length(aData$UIRL))&amp;&amp; (!var(UIRL_A))))
+      LOQ_A  &lt;- aData$LOQ[!is.na(aData$LOQ)];   len_A &lt;- length(LOQ_A);  LOQ &lt;- (if(len_A) LOQ_A[len_A] else NA);  singleLOQ  &lt;- ((len_A&lt;=1) || ((len_A==length(aData$LOQ)) &amp;&amp; (!var(LOQ_A))))
+      startReview &lt;- aData$start_review[1]
+      statLineStart &lt;- aData$index[aData$stat_line != 0]
+      Title &lt;- aData$Title[1]
+      xLabel &lt;- aData$x_label[1]
+      yLabel &lt;- aData$y_label[1]
+      yAmin  &lt;- aData$y_axis_min[1]
+      yAmax  &lt;- aData$y_axis_max[1]
+
+      # set labels for legend
+      OOElab &lt;- \"OOE\"
+      OOSlab &lt;- \"OOS\"
+      IRLlab &lt;- \"IRL\"
+      CLlab  &lt;- \"CL\"
+
+      # if no OOE limits provided take values from stats calculation
+      if (grepl(\"L|C\",aUseStat) &amp;&amp; ((is.na(LEL) &amp;&amp; is.na(UEL)) || is.na(CL))) myStats &lt;- fCPVstats(aData,LSL,USL,LOQ)  # calc statistics
+      if (grepl(\"L\",aUseStat) &amp;&amp; is.na(LEL) &amp;&amp; is.na(UEL)) {
+        LEL    &lt;- myStats$LCL
+        UEL    &lt;- myStats$UCL
+        OOElab &lt;- \"U/L-CL\"
+      }
+      if (grepl(\"C\",aUseStat) &amp;&amp; is.na(CL)) {
+        CL     &lt;- myStats$Mean
+        CLlab  &lt;- \"mean\"
+      }
+
+      if (is.na(CL)) { stop(\"Error in fCC : CL missing\") }
+
+      # calc y axis scaling
+      maxV &lt;- max(aData$NumValues)
+      minV &lt;- min(aData$NumValues)
+
+      maxY &lt;- max(c(aData$USL,aData$UIRL,aData$UEL,maxV), na.rm=TRUE)
+      minY &lt;- min(c(aData$LSL,aData$LIRL,aData$LEL,minV), na.rm=TRUE)
+
+      # if no y scaling is provided by function call use autoscaling
+      if (is.na(yAmax)) { yAmax &lt;- maxY + ((maxY-minY)*0) }
+      if (is.na(yAmin)) { yAmin &lt;- minY - ((maxY-minY)*0) }
+      yExtra &lt;- (yAmax-yAmin)*0.01
+      yAmin &lt;- yAmin - yExtra
+      yAmax &lt;- yAmax + yExtra
+
+      # draw the main plot
+      Encoding(yLabel) = \"UTF-8\"
+      par(family=\"Times\")
+      plot(aData$index, aData$NumValues, xaxt=\"n\", ylim=c(yAmin,yAmax), main=NULL, ylab=yLabel, xlab=\"\", type=\"b\")
+
+      # create seq. for x-axis labeling
+      xLen &lt;- length(aData[,1])
+      myAxisLabels &lt;- c(seq(1,xLen,(if(xLen&gt;20) xLen/20 else 1)), xLen)
+
+      # put labels on bottom x-axis
+      axis(1,myAxisLabels,aData$BatchID[myAxisLabels])  # label bottom x-axis
+
+      # label top x-axis if any
+      if (aData$x_label[1]==\"BatchID/Date\") {
+        axis(3, myAxisLabels, aData$Date[myAxisLabels])  # upper axis with date if x_label== ?BatchID/Date?
+      }
+
+      # limits (UCL, LCL, USL, LSL, CL)
+      if (!is.na(LSL)) {
+        if (singleLSL) { abline(h=LSL, col=2,lty=1,lwd=3) }
+        else { fDrawLimit(aData$index, aData$LSL, aCol=2,aLty=1,aLwd=3) }
+      }
+      if (!is.na(USL)) {
+        if (singleUSL) { abline(h=USL, col=2,lty=1,lwd=3) }
+        else { fDrawLimit(aData$index, aData$USL, aCol=2,aLty=1,aLwd=3) }
+      }
+      if (!is.na(LEL)) {
+        if (singleLEL) {  abline(h=LEL, col=3,lty=2,lwd=3) }
+        else { fDrawLimit(aData$index, aData$LEL, aCol=3,aLty=2,aLwd=3) }
+      }
+      if (!is.na(UEL)) {
+        if (singleUEL) {  abline(h=UEL, col=3,lty=2,lwd=3) }
+        else { fDrawLimit(aData$index, aData$UEL, aCol=3,aLty=2,aLwd=3) }
+      }
+      if (!is.na(CL)) {
+        if (singleCL) {  abline(h=CL,  col=4,lty=3,lwd=3) }
+        else { fDrawLimit(aData$index, aData$CL, aCol=4,aLty=3,aLwd=3) }
+      }
+      if (!is.na(LIRL)) {
+        if (singleLIRL) {  abline(h=LIRL,col=6,lty=6,lwd=3) }
+        else { fDrawLimit(aData$index, aData$LIRL, aCol=6,aLty=6,aLwd=3) }
+      }
+      if (!is.na(UIRL)) {
+        if (singleUIRL) {  abline(h=UIRL,col=6,lty=6,lwd=3) }
+        else { fDrawLimit(aData$index, aData$UIRL, aCol=6,aLty=6,aLwd=3) }
+      }
+      if (!is.na(LOQ)) {
+        if (singleLOQ) {  abline(h=LOQ, col=8,lty=1,lwd=3) }
+        else { fDrawLimit(aData$index, aData$LOQ, aCol=8,aLty=1,aLwd=3) }
+      }
+
+        # add vertical line to highlight statistical period
+       if (length(statLineStart) != 0){
+       moveUpLabel &lt;- 0
+       if (startReview - statLineStart &lt; 5){
+        moveUpLabel &lt;- 1   
+       }
+
+        startStatsPos &lt;- statLineStart - (if(1==statLineStart &amp; 1&lt;xLen) (xLen-1)/50 else 0.5)
+        abline(v=(startStatsPos), col=8, lwd=2)
+        text(startStatsPos, yAmax, labels=\"statistical\", cex=0.8, srt=90,col=8, ad=c(1,1))
+        text(startStatsPos, yAmax, labels=\"reference\", cex=0.8, srt=90, col=8, ad=c(1,-1))
+        }
+
+
+
+
+      # add vertical line to highlight review period
+      startReviewPos &lt;- startReview - (if(1==startReview &amp; 1&lt;xLen) (xLen-1)/50 else 0.5)
+      abline(v=(startReviewPos), col=8, lwd=2)
+      text(startReviewPos, yAmin, labels=\"review\", cex=0.8, srt=90, col=8, ad=c(0,1))
+      text(startReviewPos, yAmin, labels=\"reference\", cex=0.8, srt=90, col=8, ad=c(0,-1))
+
+      # place annotation if any
+      text(aData$index[aData$annotation != \"&lt;NA&gt;\"], aData$NumValues, labels=aData$annotation[aData$annotation != \"&lt;NA&gt;\"], cex=0.8, adj=c(0,0))
+
+      # mark data points excluded from stats
+      points(aData$index[aData$ex_calc==1], aData$NumValues[aData$ex_calc==1], col=1, pch=8, cex=1.8)
+
+
+      # run nelson tests and plot results for review data range only
+      rData &lt;- (if(!nrow(aData) || aData$start_review[1] &gt; nrow(aData)) aData[0,] else aData[aData$start_review[1]:nrow(aData),])
+
+      if (grepl(\"1\",rData$nelson[1])) {
+        myN1 &lt;-fNelson1(rData,LEL,UEL)
+        if (nrow(myN1)&gt;0) {
+          points(myN1$index, myN1$NumValues, col=2, pch=0, cex=1.5)
+          if (NelsonIndex==TRUE) { text(myN1$index, myN1$NumValues, labels=myN1$index,col=8, cex=0.6, adj=c(0,0)) }
+        }
+      }
+
+      if (grepl(\"2\",rData$nelson[1])) {
+        myN2 &lt;-fNelson2(rData,CL)
+        if (nrow(myN2)&gt;0) {
+          points(myN2$index, myN2$NumValues, col=2, pch=2, cex=1.5)
+          if (NelsonIndex==TRUE) { text(myN2$index, myN2$NumValues, labels=myN2$index, col=8, cex=0.6, adj=c(0,0)) }
+        }
+      }
+
+      if (grepl(\"3\",rData$nelson[1])) {
+        myN3 &lt;- fNelson3(rData)
+        if (nrow(myN3)&gt;0) {
+          points(myN3$index,myN3$NumValues, col=2, pch=3, cex=1.5)
+          if (NelsonIndex==TRUE) { text(myN3$index, myN3$NumValues, labels=myN3$index, col=8, cex=0.6, adj=c(0,0)) }
+        }
+      }
+
+      if (grepl(\"4\",rData$nelson[1])) {
+        myN4 &lt;- fNelson4(rData)
+        if (nrow(myN4)&gt;0) {
+          points(myN4$index,myN4$NumValues, col=2, pch=4, cex=1.5)
+          if (NelsonIndex==TRUE) { text(myN4$index, myN4$NumValues, labels=myN4$index,col=8, cex=0.6, adj=c(0,0)) }
+        }
+      }
+
+      myDEV &lt;- subset(aData,aData$nDEV &gt; 0)
+      if (nrow(myDEV)&gt;0) {
+        points(myDEV$index, rep(yAmin,nrow(myDEV)), col=4,pch=4,lwd=1)
+        for(n in 1:nrow(myDEV)) {
+          lines(c(myDEV$index[n],myDEV$index[n]), c(rep(yAmin), aData$NumValues[myDEV$index[n]]), col=8)
+        }
+      }
+
+      myOOE &lt;- subset(aData, aData$nOOE &gt; 0)
+      if (nrow(myOOE)&gt;0) {
+        points(myOOE$index, rep(yAmin,nrow(myOOE)), col=4,pch=1,lwd=1)
+        for(n in 1:nrow(myOOE)) {
+          lines(c(myOOE$index[n],myOOE$index[n]), c(rep(yAmin), aData$NumValues[myOOE$index[n]]), col=8)
+        }
+      }
+
+      myOOS &lt;- subset(aData,aData$nOOS &gt; 0)
+      if (nrow(myOOS)&gt;0) {
+        points(myOOS$index, rep(yAmin, nrow(myOOS)), col=4,pch=2,lwd=1)
+        for(n in 1:nrow(myOOS)) {
+          lines(c(myOOS$index[n],myOOS$index[n]), c(rep(yAmin), aData$NumValues[myOOS$index[n]]), col=8)
+        }
+      }
+
+      myCOMP &lt;- subset(aData,aData$nCOMP &gt; 0)
+      if (nrow(myCOMP)&gt;0) {
+        points(myCOMP$index, rep(yAmin,nrow(myCOMP)), col=4,pch=3,lwd=1)
+        for(n in 1:nrow(myCOMP)) {
+          lines(c(myCOMP$index[n],myCOMP$index[n]), c(rep(yAmin), aData$NumValues[myCOMP$index[n]]), col=8)
+        }
+      }
+
+      op &lt;- par(xpd=TRUE)
+
+      # add title
+      #title(main=aTitle, outer=TRUE, cex.main=1.5)
+      par(op)
+    }"
+
+
+    Rcmd "fHist &lt;- function(aData)
+    {
+      # Adds a margin to the right of every plot c(bottom, left, top, right)
+      #par(mar=c(5,5,10,10), xpd=FALSE, cex=0.8,oma=c(1,3,3,3))
+
+      # if metadata is not provided in function call read from datafile
+      LSL &lt;- aData$LSL[nrow(aData)]
+      USL &lt;- aData$USL[nrow(aData)]
+      LEL &lt;- aData$LEL[nrow(aData)]
+      UEL &lt;- aData$UEL[nrow(aData)]
+      CL  &lt;- aData$CL[nrow(aData)]
+      Title &lt;- aData$Title[1]
+      yLabel &lt;- aData$y_label[1]
+      yAmin  &lt;- aData$y_axis_min[1]
+      yAmax  &lt;- aData$y_axis_max[1]
+
+      Result &lt;- fCleanValues(aData$Value)
+
+      maxV &lt;- max(Result)
+      minV &lt;- min(Result)
+
+      maxY &lt;- max(c(USL,UEL,maxV),na.rm=TRUE)
+      minY &lt;- min(c(LSL,LEL,minV,CL),na.rm=TRUE)
+
+      # if no y scaling is provided by function call use autoscaling
+      if (is.na(yAmax)) { yAmax &lt;- maxY + ((maxY-minY)*0.25) }
+      if (is.na(yAmin)) { yAmin &lt;- minY - ((maxY-minY)*0.25) }
+
+      xLabel &lt;- as.character(aData$y_label[1])
+      # Encoding(xLabel) = \"UTF-8\"
+      par(family=\"Times\")
+      hist(Result, prob=TRUE, main=NULL, xlim=c(yAmin,yAmax), col=8, xlab=xLabel)
+
+      # if limits are available add lines
+      if (!is.na(LSL)) { abline(v=LSL, col=2,lty=1,lwd=3) }
+      if (!is.na(USL)) { abline(v=USL, col=2,lty=1,lwd=3) }
+      if (!is.na(LEL)) { abline(v=LEL, col=3,lty=2,lwd=3) }
+      if (!is.na(UEL)) { abline(v=UEL, col=3,lty=2,lwd=3) }
+      if (!is.na(CL))  { abline(v=CL,  col=4,lty=3,lwd=3) }
+
+      op &lt;- par(xpd=TRUE)
+      # add legend
+      #legend(\"right\", ncol=1, bty=\"n\", inset=c(-0.4,0), legend=c(\"OOS\",\"OOE\",\"CL\"), cex=0.8, lwd=c(2,2,2), lty=c(1,2,3), pch=c(-1,-1,-1), col=c(2,3,4))
+      # add title
+      #title(main=aData$Title[1], outer=TRUE, cex.main=1.5)
+      par(op)
+      return(NA)
+    }"
+
+
+    Rcmd "fNelson1 &lt;- function(aData, aLEL, aUEL)
+    {
+      aData$nelson1 &lt;- FALSE
+
+      if (!is.na(aLEL)) { aData$nelson1[aData$NumValues&lt;aLEL] &lt;- TRUE }
+      if (!is.na(aUEL)) { aData$nelson1[aData$NumValues&gt;aUEL] &lt;- TRUE }
+
+      result &lt;- subset(aData,aData$nelson1==TRUE)
+      return(result)
+    }"
+
+
+    Rcmd "fNelson2 &lt;- function(aData, aMean)
+    {
+      aData$nelson2 &lt;- FALSE
+
+      # if less that 9 values in dataset return nothing
+      if (nrow(aData)&lt;9) { return(subset(aData,aData$index==-1)) }
+
+      for (i in 9:nrow(aData)) {
+        nelson2 &lt;- 0
+        for (n in 0:8) {
+          if (aData$NumValues[i-n] &gt; aMean) {
+            nelson2 &lt;- nelson2 + 1
+          }
+          if (nelson2 == 9) {
+            aData$nelson2[i] &lt;- TRUE
+          }
+        }
+        nelson2 &lt;- 0
+        for (n in 0:8) {
+          if (aData$NumValues[i-n] &lt; aMean) {
+            nelson2 &lt;- nelson2 + 1
+          }
+          if (nelson2 == 9) {
+            aData$nelson2[i] &lt;- TRUE
+          }
+        }
+      }
+      result &lt;- subset(aData,aData$nelson2==TRUE)
+      return(result)
+    }"
+
+
+    Rcmd "fNelson3 &lt;- function(aData)
+    {
+      aData$nelson3 &lt;- FALSE
+
+      # if less that 6 values in dataset return nothing
+      if (nrow(aData)&lt;7) { return(subset(aData,aData$index==-1)) }
+
+      for (i in 7:nrow(aData)) {
+        nelson3 &lt;- 0
+        for (n in 0:5) {
+          if (aData$NumValues[i-n] &gt; aData$NumValues[i-n-1]) {
+            nelson3 &lt;- nelson3 + 1
+          }
+          if (nelson3 == 6) {
+            aData$nelson3[i] &lt;- TRUE
+          }
+        }
+        nelson3 &lt;- 0
+        for (n in 0:5) {
+          if (aData$NumValues[i-n] &lt; aData$NumValues[i-n-1]) {
+            nelson3 &lt;- nelson3 + 1
+          }
+          if (nelson3 == 6) {
+            aData$nelson3[i] &lt;- TRUE
+          }
+        }
+      }
+      result &lt;- subset(aData,aData$nelson3==TRUE)
+      return(result)
+    }"
+
+
+    Rcmd "fNelson4 &lt;- function(aData)
+    {
+      aData$nelson4 &lt;- FALSE
+
+      # if less that 15 values in dataset return nothing
+      if (nrow(aData)&lt;15) { return(subset(aData,aData$index==-1)) }
+
+      for (i in 15:nrow(aData)) {
+        nelson4 &lt;- 0
+        for (n in seq(0,13,by=2)) {
+          if (aData$NumValues[i-n] &gt; aData$NumValues[i-n-1] &amp; aData$NumValues[i-n-1] &lt; aData$NumValues[i-n-2]) {
+            nelson4 &lt;- nelson4  + 1
+          }
+          if (nelson4 == 7) {
+            aData$nelson4[i] &lt;- TRUE
+          }
+        }
+        nelson4 &lt;- 0
+        for (n in seq(0,13,by=2)) {
+          if (aData$NumValues[i-n] &lt; aData$NumValues[i-n-1] &amp; aData$NumValues[i-n-1] &gt; aData$NumValues[i-n-2]) {
+            nelson4 &lt;- nelson4  + 1
+          }
+          if (nelson4 == 7) {
+            aData$nelson4[i] &lt;- TRUE
+          }
+        }
+      }
+      result &lt;- subset(aData,aData$nelson4==TRUE)
+      return(result)
+    }"
+
+    Rcmd "fDrawLimit &lt;- function(aIndex, aLimit, aCol, aLty, aLwd) 
+    {
+      # Construct segments around gaps and discontinuities in limit level
+      transitions &lt;- !mapply(identical, c(NA,aLimit), c(aLimit,NA))
+      segVals &lt;- aLimit[transitions[1:length(aLimit)]]
+      transX0 &lt;- c(1:length(aLimit))[transitions[1:length(aLimit)]] - 0.5
+      transX1 &lt;- c(as.integer(transX0[1]+1.5):length(aLimit)+1)[transitions[as.integer(transX0[1]+1.5):length(aLimit)+1]] - 0.5
+      transX0 &lt;- transX0[!is.na(segVals)]
+      transX1 &lt;- transX1[!is.na(segVals)]
+      segVals&lt;-segVals[!is.na(segVals)]
+      segments(transX0,segVals,transX1,segVals,col=aCol,lty=aLty,lwd=aLwd)
+    }"
+
+    Rcmd "fNum &lt;- function(aData)
+    {
+      myValues &lt;- as.matrix(aData)
+      myValues[myValues == \"LOQ\"] &lt;- 0
+      myValues &lt;- as.numeric(myValues)
+      return(myValues)
+    }"
+
+
+    Rcmd "fOverallPpk &lt;- function(aData)
+    {
+      rawNotNA &lt;- aData$RawValue[!is.na(aData$RawValue)]
+      aValues &lt;- (if(length(rawNotNA) &amp;&amp; mean(rawNotNA)) aData$RawValue else aData$Value)
+
+      probOOS &lt;- 1-(1-pnorm(aValues*3))
+      overallProbOOS &lt;- 1-prod(probOOS)
+      overallPpk &lt;- list();  overallPpk$OverallPpk &lt;- qnorm(1-overallProbOOS)/3
+      return(overallPpk)
+    }"
+
+    Rcmd "fCleanValues &lt;- function(aValue)
+    {
+      suppressWarnings(aValue &lt;- as.numeric(aValue))
+      aValue[is.na(aValue)] &lt;- 0
+      return(aValue)
+    }"
+
+
+    Rcmd "fLoadData &lt;- function(aFilename)
+    {
+        myData &lt;- read.table(aFilename, header=TRUE, sep=\",\", dec=\".\")
+        i &lt;- sapply(myData,is.factor)
+        myData[i] &lt;- lapply(myData[i],as.character)
+        myData$Date &lt;- as.Date(myData$Date,\"%d.%m.%Y\")
+        return(myData)
+    }"
+
+    Rcmd "fOverallPpk &lt;- function(aData)
+    {
+      rawNotNA &lt;- aData$RawValue[!is.na(aData$RawValue)]
+      aValues &lt;- (if(length(rawNotNA) &amp;&amp; mean(rawNotNA)) aData$RawValue else aData$Value)
+
+      probOOS &lt;- 1-(1-pnorm(aValues*3))
+      overallProbOOS &lt;- 1-prod(probOOS)
+      overallPpk &lt;- list();  overallPpk$OverallPpk &lt;- qnorm(1-overallProbOOS)/3
+      return(overallPpk)
+    }"
+
+
+
+    }</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+</analytic>

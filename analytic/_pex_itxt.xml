@@ -1,0 +1,117 @@
+<analytic>
+	<analytic>.pex.itxt</analytic>
+	<code_text>.pex.itxt.handIPC:0Ni;
+.pex.itxt.pdfStore:`$"C:\\\\Users\\\\pdooher\\\\OneDrive\\\\Documents\\\\FD\\\\Apphion\\\\iText\\\\pdf\\\\";
+.pex.itxt.imgStore:`$"C:\\\\Users\\\\pdooher\\\\OneDrive\\\\Documents\\\\FD\\\\Apphion\\\\iText\\\\img\\\\";
+.pex.itxt.pdfHeaderImg:`$"C:\\\\Users\\\\pdooher\\\\OneDrive\\\\Documents\\\\FD\\\\Apphion\\\\iText\\\\appImg\\\\";
+
+.pex.itxt.pdfStore:`$"/home/kx_user/kxinstall/delta-bin/software/Tomcat_9_0_19/apache-tomcat-9.0.19/webapps/files/";
+.pex.itxt.imgStore:`$"/home/kx_user/kxinstall/iText/img/";
+.pex.itxt.pdfHeaderImg:`$"/home/kx_user/kxinstall/iText/appImg/";
+
+.pex.itxt.registerIText:{[]
+    
+    .pex.itxt.handIPC:.z.w;
+    
+    :`pdf`img`pdfHeaderImg!(.pex.itxt.pdfStore;.pex.itxt.imgStore;.pex.itxt.pdfHeaderImg);
+    
+    };
+
+
+.pex.itxt.generatePDF:{[rSpecDict]
+
+    if[null .pex.itxt.handIPC;
+         strErr:"iText Not Running - please check log files";
+            .log.err[.z.h;strErr;()];
+            :`$strErr;
+        ];
+
+    // TODO - Check is this still valid ???
+    /if[`rspecID in key rspecDict;
+    /    rspecDetails:select SiteID, MaterialCode, MaterialAnniversary from RspecDetails where RspecName = rspecDict[`rspecID];
+    /    // if no details from that RSpec then return error;
+    /    if[not count rspecDetails;
+    /        strErr:"No Details for RSpec ",(string rspecDict[`rspecID]);
+    /        .log.err[.z.h;strErr;()];
+    /        :`$strErr;
+    /        ];
+    /    sList:rspecDetails[`SiteID];
+    /    mCodeList:rspecDetails[`MaterialCode];
+    /    ];
+
+    if[not `rspecID in key rSpecDict;
+        if[not all `site`material`inspectionType`mic`attribute in key rSpecDict;
+            strErr:"`site`material`inspectionType`mic`attribute not supplied";
+            .log.err[.z.h;strErr;()];
+            :`$strErr;
+            ];
+        ];
+
+    // Get QA Data
+    rSpecDict[`stDt]:rSpecDict[`plotStDt];
+    rSpecDict[`endDt]:rSpecDict[`plotEndDt];
+    pdfData1::.pex.util.getQADataSet[rSpecDict];
+    pdfData1::update y_label:enlist "Y Label" from pdfData1 where i = 0 ;
+
+    // Tmp workaround to save data to csv before loading into kdb+ again.
+    save `$":/home/kx_user/kxinstall/iText/tmp/pdfData1.csv";
+    Rcmd "rSpecData &lt;- fLoadData('/home/kx_user/kxinstall/iText/tmp/pdfData1.csv')";
+
+    // Generate stats table
+    rStatRes:Rget "fCPVplot(rSpecData,\"Stats\")";
+    statsRes:(`$rStatRes[0][`names])!first each 0f^rStatRes[1];
+
+    // Get uniqueName for this run.
+    uName:((string .z.p) except "[D.:]");
+
+    // Generate histogram image
+    uHistName:uName,"_hist.png";
+    uHistDir:(string .pex.itxt.imgStore),uHistName;
+    uHistPngRes:Rcmd ("png(\"",(uHistDir),"\", width = 350, height = 350)");
+    histRes:Rget "fCPVplot(rSpecData,\"Hist\")";
+    uHistPngRes:Rcmd ("dev.off()");
+
+    // Generate qq-plot image
+    uQQPlotName:uName,"_qqplot.png";
+    uQQPlotDir:(string .pex.itxt.imgStore),uQQPlotName;
+    uQQPlotPngRes:Rcmd ("png(\"",(uQQPlotDir),"\", width = 350, height = 350)");
+    fData:select BatchCode:`$BatchID,InspLot:InspCode, MfgDate:Date, Val:RawValue from pdfData1;
+    Rset ["qqTab";fData];
+    Rget "fQQ(qqTab)";
+    uQQPlotRes:Rcmd ("dev.off()");
+
+    // Generate PDF
+    dictPDF:()!();
+    dictPDF[`dummy]:enlist (`dummy;0 0;"dummy");
+    dictPDF[`function]:`generatePDF;
+    dictPDF[`pdfName]:`$uName,".pdf";
+    //dictPDF[`qqPlotImg]:`$"qq-plot.png";
+    dictPDF[`qqPlotImg]:`$uQQPlotName;
+    dictPDF[`histImg]:`$uHistName;
+    //dictPDF[`statsDict]:`min`max`std_dev`ppk`ppkCl`ppkCu`nLOQs!(98.48499999f;1.143333f;0.0879804f;0.175318f;-0.239936f;-0.393507f;0.98f);
+    dictPDF[`statsDict]:statsRes;
+    dictPDF[`periodDict]:`plotSt`plotEnd`revSt`revEnd`statSt`statEnd!(rSpecDict[`plotStDt];rSpecDict[`plotEndDt];rSpecDict[`revStDt];rSpecDict[`revEndDt];rSpecDict[`statStDt];rSpecDict[`statEndDt]);
+
+    .log.out[.z.h;"Generating PDF ";dictPDF[`pdfName]];
+
+    // Pass function to the pdf generator;
+    res:@[.pex.itxt.handIPC;dictPDF;()];
+
+    .log.out[.z.h;"PDF Generated";dictPDF[`pdfName]];
+    
+    // Return name of pdf file
+    :dictPDF[`pdfName];
+
+    };
+</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Instruction</typ>
+	<private>1</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype>polling</analytictype>
+	<returndescription></returndescription>
+</analytic>

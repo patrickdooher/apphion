@@ -1,0 +1,62 @@
+<analytic>
+	<analytic>.pex.ui.Rspec.add</analytic>
+	<code_text>{[sID;matCode;inspTy;mic;att]
+	 .apph.shared.GroupI+:1;
+   / a:count sID;
+ /if[a ~1;
+   / fData:flip `SiteID`MaterialCode`insecTy`MIC`MICDesc`Attribute!(enlist sID;matCode;inspTy;mic;att;att)];
+    
+    fData:flip `SiteID`MaterialCode`insecTy`MIC`MICDesc`Attribute!(sID;matCode;inspTy;mic;att;att);
+    
+    
+    
+ fData2:update GroupID:.apph.shared.GroupI from fData;
+    `RspecSel upsert fData2
+	}</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+	<param>
+		<parameter>sID</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<param>
+		<parameter>matCode</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<param>
+		<parameter>inspTy</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<param>
+		<parameter>mic</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Symbol[]</datatype>
+	</param>
+	<param>
+		<parameter>att</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Table</datatype>
+	</param>
+	<analyticgroup>PeX_UI_API</analyticgroup>
+</analytic>

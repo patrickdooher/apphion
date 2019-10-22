@@ -1,0 +1,26 @@
+<analytic>
+	<analytic>.pex.pem</analytic>
+	<code_text>
+// Function to get list of permssioned sites
+.pex.pem.getPermissionedSites:{[]
+    
+    pemSites:$[.pm.u in key .pex.pem.usrSitePermissions;
+        .pex.pem.usrSitePermissions[.pm.u];
+        .pex.ui.util.getSites[][`SiteID]];
+        
+    :pemSites;
+    };
+</code_text>
+	<description>.pex.pem functions
+Permissions Code
+</description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Instruction</typ>
+	<private>1</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype>polling</analytictype>
+	<returndescription></returndescription>
+</analytic>

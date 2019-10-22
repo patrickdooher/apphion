@@ -1,0 +1,76 @@
+<analytic>
+	<analytic>.pex.ui.Rspec.table</analytic>
+	<code_text>{[dict]
+	    0N!dict;
+ 
+  sID:dict[`sID];
+  matCode:dict[`matCode];
+  inspTy:dict[`inspTy];
+  att:dict[`att];
+  upp:dict[`upp];
+  lwr:dict[`lwr];
+  cl:dict[`cl];
+  stPlot:dict[`stPlot];
+  enPlot:dict[`enPlot];
+  stRev:dict[`stRev];
+  enRev:dict[`enRev];
+  uirl:dict[`uirl];
+  lirl:dict[`lirl];
+  uel:dict[`uel];
+  lel:dict[`lel];
+  stStat:dict[`stStat];
+  enStat:dict[`enStat];
+
+ res:select BatchCode, uppLmt:MasterInsp_SGO[([]InspCode:InspCode);`USL], lwLmt:MasterInsp_SGO[([]InspCode:InspCode);`LSL], cL:MasterInsp_SGO[([]InspCode:InspCode);`CL], UIRL:MasterInsp_SGO[([]InspCode:InspCode);`UIRL], LIRL:MasterInsp_SGO[([]InspCode:InspCode);`LIRL], UEL:MasterInsp_SGO[([]InspCode:InspCode);`UEL], LEL:MasterInsp_SGO[([]InspCode:InspCode);`LEL], N1:avg OriginalVal+(3*dev OriginalVal), MfgDate:btchDt[([]BatchCode:BatchCode);`MfgDate], Val:OriginalVal, RawVal:OriginalVal, avgval:avg OriginalVal, valvavg:OriginalVal&gt;avg OriginalVal,ascdescval:OriginalVal&gt;prev OriginalVal from QA where SiteID in sID, MaterialCode in matCode, MasterInsp_SGO[([]InspCode:InspCode);`InspType] in inspTy, mmi[([]InspCode:InspCode);`Attribute] in att;
+ res0:update ascdescval6:6 msum ascdescval, valvavg9:9 msum valvavg from res;
+ i9:exec i from res0 where valvavg9  =9;
+ i9Highlight:distinct raze (-9+til 9)+/:i9;
+ res0:update valvavg9HL:1b from res0 where i in i9Highlight;
+ i6:exec i from res0 where valvavg9  =6;
+ i6Highlight:distinct raze (-6+til 6)+/:i6;
+ res0:update ascdescval6HL:1b from res0 where i in i6Highlight;
+    
+//00E - upp lwr
+ if[(upp ~ 0n) and (lwr ~ 0n) and (cl ~ 0n); res1:res0];
+    
+ if[not (upp ~ 0n) and (lwr ~ 0n) and (cl ~ 0n); res1:update uppLmt:upp, lwLmt:lwr, cL:cl from res0];
+
+//IRL-UIRL LIRL
+  if[(uirl ~ 0n) and (lirl ~ 0n); res2:res1];
+    
+  if[not (uirl ~ 0n) and (lirl ~ 0n); res2:update UIRL:uirl, LIRL:lirl from res1];
+    
+//OOS- uel lel
+  if[(uel ~ 0n) and (lel ~ 0n); res3:res2];
+    
+  if[not (uel ~ 0n) and (lel ~ 0n); res3:update UEL:uel, LEL:lel from res2];
+    res4:res3;
+ //plotting period - must be selected in UI
+ res5:select from res4 where MfgDate within (stPlot;enPlot);
+//review period - subset of plotting period - doesnt need to be selected so need to find out if IF statement should be used
+
+ res6:select from res5 where MfgDate within (stRev;enRev);
+
+ res7:select from res6 where MfgDate within (stStat;enStat)
+
+    
+	}</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+	<param>
+		<parameter>dict</parameter>
+		<default></default>
+		<description>default parameter</description>
+		<required>1</required>
+		<datatype>Dict</datatype>
+	</param>
+	<analyticgroup>PeX_UI_API</analyticgroup>
+</analytic>

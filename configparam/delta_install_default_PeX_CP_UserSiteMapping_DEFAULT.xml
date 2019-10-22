@@ -1,0 +1,19 @@
+<configparam>
+	<ucname>delta_install_default</ucname>
+	<override>DEFAULT</override>
+	<parameter>PeX_CP_UserSiteMapping</parameter>
+	<description></description>
+	<validationAnalytic></validationAnalytic>
+	<param>
+		<index>0</index>
+		<element>usr</element>
+		<elementType>Symbol</elementType>
+		<elementValue>test_usr</elementValue>
+	</param>
+	<param>
+		<index>0</index>
+		<element>site</element>
+		<elementType>Symbol</elementType>
+		<elementValue>allSites</elementValue>
+	</param>
+</configparam>

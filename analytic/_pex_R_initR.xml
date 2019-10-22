@@ -1,0 +1,22 @@
+<analytic>
+	<analytic>.pex.R.initR</analytic>
+	<code_text>{[]
+	
+    .log.out[.z.h;"Instantiating embedR ";()];
+    value "\\l rinit.q";
+    
+    .log.out[.z.h;"Initialising the qqplot functionality ";()];
+    .al.callfunction[`.app.R.initQQPlotFunctions][];
+    .al.callfunction[`.pex.R.initRScript][];
+	}</code_text>
+	<description></description>
+	<dictionaryparams>0</dictionaryparams>
+	<typ>Analytic</typ>
+	<private>0</private>
+	<returntype></returntype>
+	<returndata></returndata>
+	<defaultconnection></defaultconnection>
+	<alias></alias>
+	<analytictype></analytictype>
+	<returndescription></returndescription>
+</analytic>
